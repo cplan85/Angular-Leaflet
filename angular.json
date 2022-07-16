@@ -51,7 +51,9 @@
               "src/styles.css",
               "./node_modules/leaflet/dist/leaflet.css"
             ],
-            "scripts": []
+            "scripts": [
+              "./node_modules/leaflet.tilelayer.colorfilter/src/leaflet-tilelayer-colorfilter.min.js"
+            ]
           },
           "configurations": {
             "production": {
@@ -120,7 +122,9 @@
               "./node_modules/leaflet/dist/leaflet.css"
 
             ],
-            "scripts": []
+            "scripts": [
+              "./node_modules/leaflet.tilelayer.colorfilter/src/leaflet-tilelayer-colorfilter.min.js"
+            ]
           }
         }
       }
