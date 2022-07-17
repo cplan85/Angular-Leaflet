@@ -4,6 +4,8 @@ import * as L from 'leaflet';
 import * as geojson from 'geojson';
 import { AfterViewInit } from '@angular/core';
 
+import * as barcelona from '../../data/barris.json';
+
 @Component({
   selector: 'app-map',
   templateUrl: './map.component.html',
@@ -23,6 +25,63 @@ export class MapComponent implements AfterViewInit {
     shadowAnchor: [4, 62], // the same for the shadow
     popupAnchor: [-3, -76], // point from which the popup should open relative to the iconAnchor
   });
+
+  highlightFeature = (e: any) => {
+    const layer = e.target;
+
+    layer.setStyle({
+      weight: 5,
+      color: 'rgb(76,70,33)',
+      dashArray: '',
+      fillOpacity: 0.7,
+      fillColor: 'rgba(102,133,13, 0.5)',
+    });
+
+    if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
+      layer.bringToFront();
+    }
+
+    // info.update(layer.feature.properties);
+  };
+
+  resetHighlight = (e: any) => {
+    //L.geoJSON(barcelona as any).resetStyle(e.target);
+    //info.update();
+    const layer = e.target;
+
+    layer.setStyle({
+      weight: 2,
+      opacity: 1,
+      color: 'white',
+      dashArray: '3',
+      fillOpacity: 0.7,
+      fillColor: 'rgba(248,144,59, 0.5)',
+    });
+  };
+
+  zoomToFeature = (e: any) => {
+    this.map.fitBounds(e.target!.getBounds());
+  };
+
+  onEachFeature = (feature: any, layer: any) => {
+    layer.on({
+      mouseover: this.highlightFeature,
+      mouseout: this.resetHighlight,
+      click: this.zoomToFeature,
+    });
+  };
+
+  style = (feature: any) => {
+    return {
+      weight: 2,
+      opacity: 1,
+      color: 'white',
+      dashArray: '3',
+      fillOpacity: 0.7,
+      fillColor: 'rgba(248,144,59, 0.5)',
+      // fillColor: 'rgba(248,144,59, 0.5)',
+    };
+  };
 
   myMainFilter = ['hue:324deg', 'saturate:250%'];
   myFilter = ['bright:99%', 'hue:226deg', 'saturate:150%'];
@@ -48,6 +107,10 @@ export class MapComponent implements AfterViewInit {
         subdomains: 'abcd',
       }
     ),
+    layer3: L.geoJSON(barcelona as any, {
+      style: this.style,
+      // onEachFeature: onEachFeature,
+    }),
   };
   options = {
     layers: [
@@ -71,6 +134,11 @@ export class MapComponent implements AfterViewInit {
           subdomains: 'abcd',
         }
       ),
+      //TURN OFF ON DEFAULT
+      // L.geoJSON(barcelona as any, {
+      //   style: this.style,
+      //   // onEachFeature: onEachFeature,
+      // }),
     ],
     zoom: 13,
     center: L.latLng(41.390205, 2.154007),
@@ -118,11 +186,40 @@ export class MapComponent implements AfterViewInit {
           subdomains: 'abcd',
         }
       ),
+      Barrios: L.geoJSON(barcelona as any, {
+        style: this.style,
+        onEachFeature: this.onEachFeature,
+      }),
     },
   };
+
+  //BEgin GEOJSON LOGIC
+  getColor(d: number) {
+    return d > 70
+      ? '#800026'
+      : d > 60
+      ? '#BD0026'
+      : d > 50
+      ? '#E31A1C'
+      : d > 30
+      ? '#FC4E2A'
+      : d > 20
+      ? '#FD8D3C'
+      : d > 10
+      ? '#FEB24C'
+      : d > 0
+      ? '#FED976'
+      : '#FFEDA0';
+  }
 
   private initMap(): void {}
   constructor() {}
 
-  ngAfterViewInit(): void {}
+  ngAfterViewInit(): void {
+    const geojson = L.geoJSON(barcelona as any, {
+      style: this.style,
+      // onEachFeature: onEachFeature,
+    }).addTo(this.map);
+    //console.log('My barcelona', this.features);
+  }
 }
