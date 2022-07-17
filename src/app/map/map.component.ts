@@ -11,6 +11,7 @@ import { AfterViewInit } from '@angular/core';
 export class MapComponent implements AfterViewInit {
   private map: any;
 
+  myMainFilter = ['hue:324deg', 'saturate:250%'];
   myFilter = ['bright:99%', 'hue:226deg', 'saturate:150%'];
   options = {
     layers: [
@@ -20,7 +21,18 @@ export class MapComponent implements AfterViewInit {
           maxZoom: 18,
           attribution:
             '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-          filter: this.myFilter,
+          filter: this.myMainFilter,
+        }
+      ),
+      (L.tileLayer as any).colorFilter(
+        'https://stamen-tiles-{s}.a.ssl.fastly.net/toner-labels/{z}/{x}/{y}{r}.{ext}',
+        {
+          maxZoom: 18,
+          attribution:
+            'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+          filter: this.myMainFilter,
+          ext: 'png',
+          subdomains: 'abcd',
         }
       ),
     ],
@@ -28,19 +40,7 @@ export class MapComponent implements AfterViewInit {
     center: L.latLng(41.390205, 2.154007),
   };
 
-  private initMap(): void {
-    // this.map = L.map('map').setView([41.3947, 2.1698], 13);
-    // var tiles = (L.tileLayer as any)
-    //   .colorFilter(
-    //     'https://stamen-tiles.a.ssl.fastly.net/watercolor/{z}/{x}/{y}.jpg',
-    //     {
-    //       maxZoom: 19,
-    //       attribution:
-    //         '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-    //     }
-    //   )
-    //   .addTo(this.map);
-  }
+  private initMap(): void {}
   constructor() {}
 
   ngAfterViewInit(): void {
