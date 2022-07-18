@@ -5,6 +5,8 @@ import * as geojson from 'geojson';
 import { AfterViewInit } from '@angular/core';
 import { ChangeDetectorRef } from '@angular/core';
 
+import { Map } from 'leaflet';
+
 import * as barcelona from '../../data/barris.json';
 
 import * as greensites from '../../data/greenSites.json';
@@ -15,12 +17,12 @@ import * as greensites from '../../data/greenSites.json';
   styleUrls: ['./map.component.css'],
 })
 export class MapComponent implements AfterViewInit {
-  private map: any;
-  public currentBarrio: string ="";
-  public currentBarrioWeb: string ="";
-  appGreenSites:any[] =[];
+  public map!: Map;
+  public currentBarrio: string = '';
+  public currentBarrioWeb: string = '';
+  appGreenSites: L.Layer[] = [];
 
-  constructor( public cRef: ChangeDetectorRef) {}
+  constructor(public cRef: ChangeDetectorRef) {}
 
   angularIcon = L.icon({
     iconUrl: './assets/angular-icon.svg',
@@ -34,12 +36,9 @@ export class MapComponent implements AfterViewInit {
     popupAnchor: [-3, -76], // point from which the popup should open relative to the iconAnchor
   });
 
- 
-
   highlightFeature = (e: any) => {
     const layer = e.target;
-    console.log(e.target.feature.properties)
-
+    console.log(e.target.feature.properties, 'barrios individual');
 
     layer.setStyle({
       weight: 5,
@@ -55,10 +54,8 @@ export class MapComponent implements AfterViewInit {
 
     this.currentBarrio = e.target.feature.properties.NOM;
     this.currentBarrioWeb = e.target.feature.properties.WEB1;
-    console.log("highlight feature", e.target.feature.properties.NOM);
+    console.log('highlight feature', e.target.feature.properties.NOM);
     this.cRef.detectChanges();
-   
-
   };
 
   resetHighlight = (e: any) => {
@@ -75,6 +72,7 @@ export class MapComponent implements AfterViewInit {
   };
 
   zoomToFeature = (e: any) => {
+    console.log(e.target!.getBounds());
     this.map.fitBounds(e.target!.getBounds());
   };
 
@@ -84,8 +82,11 @@ export class MapComponent implements AfterViewInit {
       mouseout: this.resetHighlight,
       click: this.zoomToFeature,
     });
-  
   };
+
+  onMapReady(map: Map) {
+    console.log('ON MAP READY', map);
+  }
 
   style = (feature: any) => {
     return {
@@ -95,115 +96,92 @@ export class MapComponent implements AfterViewInit {
       dashArray: '3',
       fillOpacity: 0.7,
       fillColor: 'rgba(248,144,59, 0.5)',
-      // fillColor: 'rgba(248,144,59, 0.5)',
     };
   };
 
-  onMapReady(map: any) {
-    console.log("on Map Readya afeae")
-
-    let greenSites = Object.entries(greensites);
-
-    greenSites.forEach((object: any) => {
-      return L.marker(
-        [
-          parseFloat(object.geo_epgs_4326_x),
-          parseFloat(object.geo_epgs_4326_y),
-        ],
-        { icon: this.angularIcon }
-      ).addTo(map).bindPopup(`This is ${object.addresses_district_name}
-        Address: ${object.addresses_road_name}, ${object.addresses_start_street_number}
-        `);
-    } );
-  }
+  greenSiteImg = '../../assets/greenSite_default.jpg';
 
   getGreenSites() {
-
     let greenSites = Object.entries(greensites);
+    console.log(greenSites, 'green Sites');
 
-    console.log(greenSites, "Green Sites" )
-     return greenSites.forEach((object: any) => {
+    greenSites.forEach((object: any) => {
       const finalObj = object[1];
 
-      console.log(typeof finalObj.geo_epgs_4326_x, "objects" )
-      if(typeof finalObj.geo_epgs_4326_x === "string") {
-      return this.layers.push(L.marker(
-        [
-          parseFloat(finalObj.geo_epgs_4326_x),
-          parseFloat(finalObj.geo_epgs_4326_y),
-        ],
-        { icon: this.angularIcon }
-      ).bindPopup(`This is ${finalObj.addresses_district_name}
-        Address: ${finalObj.addresses_road_name}, ${finalObj.addresses_start_street_number}
-        `) )
-      } return null;
-    } );
+      if (typeof finalObj.geo_epgs_4326_x === 'string') {
+        var content =
+          '<div class="time-into-popup"><div class="time"><div class="date">' +
+          'date' +
+          '</div><div class="day">' +
+          finalObj.name +
+          '</div></div></div>' +
+          '<div class="pict-into-popup"><img class="pict" src="' +
+          this.greenSiteImg +
+          '"></div>' +
+          '<div class="comment-into-popup">' +
+          finalObj.addresses_start_street_number +
+          '</div>' +
+          '<div class="likes-into-popup"><span class="likes-count"><i class="fa fa-heart likes-icon"></i>' +
+          finalObj.addresses_district_name +
+          '</span></div>';
+        return this.appGreenSites.push(
+          L.marker(
+            [
+              parseFloat(finalObj.geo_epgs_4326_x),
+              parseFloat(finalObj.geo_epgs_4326_y),
+            ],
+            { icon: this.angularIcon }
+          ).bindPopup(content)
+        );
+      }
+      return null;
+    });
+    this.layersControl.overlays.GreenSites = L.layerGroup(this.appGreenSites);
   }
 
-  
   createMarker() {
-   return L.marker([42.3947, 2.181], { icon: this.angularIcon }).bindPopup(
+    return L.marker([42.3947, 2.181], { icon: this.angularIcon }).bindPopup(
       'Custom Angular Marker from Create Marker'
-    )
+    );
   }
 
   myMainFilter = ['hue:324deg', 'saturate:250%'];
   myFilter = ['bright:99%', 'hue:226deg', 'saturate:150%'];
 
-  baseLayers = {
-    layer1: (L.tileLayer as any).colorFilter(
-      'https://stamen-tiles.a.ssl.fastly.net/watercolor/{z}/{x}/{y}.jpg',
-      {
-        maxZoom: 18,
-        attribution:
-          '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-        filter: this.myMainFilter,
-      }
-    ),
-    layer2: (L.tileLayer as any).colorFilter(
-      'https://stamen-tiles-{s}.a.ssl.fastly.net/toner-labels/{z}/{x}/{y}{r}.{ext}',
-      {
-        maxZoom: 18,
-        attribution:
-          'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-        filter: this.myMainFilter,
-        ext: 'png',
-        subdomains: 'abcd',
-      }
-    ),
-    layer3: L.geoJSON(barcelona as any, {
-      style: this.style,
-      // onEachFeature: onEachFeature,
-    }),
-  };
+  baseLayer1 = (L.tileLayer as any).colorFilter(
+    'https://stamen-tiles.a.ssl.fastly.net/watercolor/{z}/{x}/{y}.jpg',
+    {
+      maxZoom: 18,
+      attribution:
+        '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      filter: this.myMainFilter,
+    }
+  );
+
+  baseLayer2 = (L.tileLayer as any).colorFilter(
+    'https://stamen-tiles.a.ssl.fastly.net/watercolor/{z}/{x}/{y}.jpg',
+    {
+      maxZoom: 18,
+      attribution:
+        '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      filter: this.myFilter,
+    }
+  );
+
+  tonerLayer = (L.tileLayer as any).colorFilter(
+    'https://stamen-tiles-{s}.a.ssl.fastly.net/toner-labels/{z}/{x}/{y}{r}.{ext}',
+    {
+      maxZoom: 18,
+      attribution:
+        'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      filter: this.myMainFilter,
+      ext: 'png',
+      subdomains: 'abcd',
+    }
+  );
+
   options = {
-    layers: [
-      (L.tileLayer as any).colorFilter(
-        'https://stamen-tiles.a.ssl.fastly.net/watercolor/{z}/{x}/{y}.jpg',
-        {
-          maxZoom: 18,
-          attribution:
-            '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-          filter: this.myMainFilter,
-        }
-      ),
-      (L.tileLayer as any).colorFilter(
-        'https://stamen-tiles-{s}.a.ssl.fastly.net/toner-labels/{z}/{x}/{y}{r}.{ext}',
-        {
-          maxZoom: 18,
-          attribution:
-            'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-          filter: this.myMainFilter,
-          ext: 'png',
-          subdomains: 'abcd',
-        }
-      ),
-      //TURN OFF ON DEFAULT
-      // L.geoJSON(barcelona as any, {
-      //   style: this.style,
-      //   // onEachFeature: onEachFeature,
-      // }),
-    ],
+    layers: [this.baseLayer1, this.tonerLayer],
     zoom: 13,
     center: L.latLng(41.390205, 2.154007),
   };
@@ -219,22 +197,12 @@ export class MapComponent implements AfterViewInit {
       'Custom Angular Marker'
     ),
     this.createMarker(),
-    
-   // this.getGreenSites()
   ];
-
-  
 
   layersControl = {
     baseLayers: {
-      'Open Street Map': (L.tileLayer as any).colorFilter(
-        'https://stamen-tiles.a.ssl.fastly.net/watercolor/{z}/{x}/{y}.jpg',
-        { maxZoom: 18, attribution: '...', filter: this.myMainFilter }
-      ),
-      'WaterColor Map 2': (L.tileLayer as any).colorFilter(
-        'https://stamen-tiles.a.ssl.fastly.net/watercolor/{z}/{x}/{y}.jpg',
-        { maxZoom: 18, attribution: '...', filter: this.myFilter }
-      ),
+      'Open Street Map': this.baseLayer1,
+      'WaterColor Map 2': this.baseLayer2,
     },
     overlays: {
       'Big Circle': L.circle([41.3947, 2.181], { radius: 5000 }),
@@ -244,27 +212,15 @@ export class MapComponent implements AfterViewInit {
         [41.7, 2.191],
         [41.7, 2.191],
       ]),
-      labels: (L.tileLayer as any).colorFilter(
-        'https://stamen-tiles-{s}.a.ssl.fastly.net/toner-labels/{z}/{x}/{y}{r}.{ext}',
-        {
-          maxZoom: 18,
-          attribution:
-            'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-          filter: this.myMainFilter,
-          ext: 'png',
-          subdomains: 'abcd',
-        }
-      ),
+      labels: this.tonerLayer,
       Barrios: L.geoJSON(barcelona as any, {
         style: this.style,
         onEachFeature: this.onEachFeature,
       }),
-      LayerToModify: L.layerGroup(this.appGreenSites)
-      
+      GreenSites: L.layerGroup(this.appGreenSites),
     },
   };
 
-  //BEgin GEOJSON LOGIC
   getColor(d: number) {
     return d > 70
       ? '#800026'
@@ -283,10 +239,9 @@ export class MapComponent implements AfterViewInit {
       : '#FFEDA0';
   }
 
-  private initMap(): void {}
-
   ngAfterViewInit(): void {
     this.getGreenSites();
-    this.onMapReady(this.map);
+    //this.onMapReady(this.map);
+    console.log(this, 'this');
   }
 }
