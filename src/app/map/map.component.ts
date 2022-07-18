@@ -3,8 +3,11 @@ import { Component, OnInit } from '@angular/core';
 import * as L from 'leaflet';
 import * as geojson from 'geojson';
 import { AfterViewInit } from '@angular/core';
+import { ChangeDetectorRef } from '@angular/core';
 
 import * as barcelona from '../../data/barris.json';
+
+import * as greensites from '../../data/greenSites.json';
 
 @Component({
   selector: 'app-map',
@@ -13,6 +16,11 @@ import * as barcelona from '../../data/barris.json';
 })
 export class MapComponent implements AfterViewInit {
   private map: any;
+  public currentBarrio: string ="";
+  public currentBarrioWeb: string ="";
+  appGreenSites:any[] =[];
+
+  constructor( public cRef: ChangeDetectorRef) {}
 
   angularIcon = L.icon({
     iconUrl: './assets/angular-icon.svg',
@@ -27,75 +35,11 @@ export class MapComponent implements AfterViewInit {
   });
 
  
-  /*
-  onMapReady(map: any) {
-   
-    // control that shows state info on hover
-    let info = new L.Control();
-    // here you want the reference to be info, therefore this = info
-    // so do not use es6 to access the class instance with this
-    info.onAdd = function (map: any) {
-      this._div = L.DomUtil.create('div', 'info');
-      this.update();
-      return this._div;
-    };
-    // also here you want the reference to be info, therefore this = info
-    // so do not use es6 to access the class instance with this
-    info.update = function (props: any) {
-      this._div.innerHTML = '<h4>US Population Density</h4>' + (props ?
-        '<b>' + props.name + '</b><br />' + props.density + ' people / mi<sup>2</sup>'
-        : 'Hover over a state');
-    };
-
-    info.addTo(map);
-
-    // get color depending on population density value
-    const getColor = d => {
-      return d > 1000 ? '#800026' :
-        d > 500 ? '#BD0026' :
-          d > 200 ? '#E31A1C' :
-            d > 100 ? '#FC4E2A' :
-              d > 50 ? '#FD8D3C' :
-                d > 20 ? '#FEB24C' :
-                  d > 10 ? '#FED976' :
-                    '#FFEDA0';
-    }
-
-
-
-    let geojson;
-
-  
-
-
-    const legend = new L.Control({ position: 'bottomright' });
-
-    legend.onAdd =( map: any) => {
-
-      let div = L.DomUtil.create('div', 'info legend'),
-        grades = [0, 10, 20, 50, 100, 200, 500, 1000],
-        labels = [],
-        from, to;
-
-      for (var i = 0; i < grades.length; i++) {
-        from = grades[i];
-        to = grades[i + 1];
-
-        labels.push(
-          '<i style="background:' + getColor(from + 1) + '"></i> ' +
-          from + (to ? '&ndash;' + to : '+'));
-      }
-
-      div.innerHTML = labels.join('<br>');
-      return div;
-    };
-
-    legend.addTo(map);
-  }
-  */
 
   highlightFeature = (e: any) => {
     const layer = e.target;
+    console.log(e.target.feature.properties)
+
 
     layer.setStyle({
       weight: 5,
@@ -109,12 +53,15 @@ export class MapComponent implements AfterViewInit {
       layer.bringToFront();
     }
 
-    // info.update(layer.feature.properties);
+    this.currentBarrio = e.target.feature.properties.NOM;
+    this.currentBarrioWeb = e.target.feature.properties.WEB1;
+    console.log("highlight feature", e.target.feature.properties.NOM);
+    this.cRef.detectChanges();
+   
+
   };
 
   resetHighlight = (e: any) => {
-    //L.geoJSON(barcelona as any).resetStyle(e.target);
-    //info.update();
     const layer = e.target;
 
     layer.setStyle({
@@ -137,6 +84,7 @@ export class MapComponent implements AfterViewInit {
       mouseout: this.resetHighlight,
       click: this.zoomToFeature,
     });
+  
   };
 
   style = (feature: any) => {
@@ -150,6 +98,54 @@ export class MapComponent implements AfterViewInit {
       // fillColor: 'rgba(248,144,59, 0.5)',
     };
   };
+
+  onMapReady(map: any) {
+    console.log("on Map Readya afeae")
+
+    let greenSites = Object.entries(greensites);
+
+    greenSites.forEach((object: any) => {
+      return L.marker(
+        [
+          parseFloat(object.geo_epgs_4326_x),
+          parseFloat(object.geo_epgs_4326_y),
+        ],
+        { icon: this.angularIcon }
+      ).addTo(map).bindPopup(`This is ${object.addresses_district_name}
+        Address: ${object.addresses_road_name}, ${object.addresses_start_street_number}
+        `);
+    } );
+  }
+
+  getGreenSites() {
+
+    let greenSites = Object.entries(greensites);
+
+    console.log(greenSites, "Green Sites" )
+     return greenSites.forEach((object: any) => {
+      const finalObj = object[1];
+
+      console.log(typeof finalObj.geo_epgs_4326_x, "objects" )
+      if(typeof finalObj.geo_epgs_4326_x === "string") {
+      return this.layers.push(L.marker(
+        [
+          parseFloat(finalObj.geo_epgs_4326_x),
+          parseFloat(finalObj.geo_epgs_4326_y),
+        ],
+        { icon: this.angularIcon }
+      ).bindPopup(`This is ${finalObj.addresses_district_name}
+        Address: ${finalObj.addresses_road_name}, ${finalObj.addresses_start_street_number}
+        `) )
+      } return null;
+    } );
+  }
+
+  
+  createMarker() {
+   return L.marker([42.3947, 2.181], { icon: this.angularIcon }).bindPopup(
+      'Custom Angular Marker from Create Marker'
+    )
+  }
 
   myMainFilter = ['hue:324deg', 'saturate:250%'];
   myFilter = ['bright:99%', 'hue:226deg', 'saturate:150%'];
@@ -222,7 +218,12 @@ export class MapComponent implements AfterViewInit {
     L.marker([41.3947, 2.181], { icon: this.angularIcon }).bindPopup(
       'Custom Angular Marker'
     ),
+    this.createMarker(),
+    
+   // this.getGreenSites()
   ];
+
+  
 
   layersControl = {
     baseLayers: {
@@ -258,6 +259,8 @@ export class MapComponent implements AfterViewInit {
         style: this.style,
         onEachFeature: this.onEachFeature,
       }),
+      LayerToModify: L.layerGroup(this.appGreenSites)
+      
     },
   };
 
@@ -281,13 +284,9 @@ export class MapComponent implements AfterViewInit {
   }
 
   private initMap(): void {}
-  constructor() {}
 
   ngAfterViewInit(): void {
-    const geojson = L.geoJSON(barcelona as any, {
-      style: this.style,
-      // onEachFeature: onEachFeature,
-    }).addTo(this.map);
-    //console.log('My barcelona', this.features);
+    this.getGreenSites();
+    this.onMapReady(this.map);
   }
 }
