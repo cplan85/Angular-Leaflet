@@ -22,6 +22,9 @@ export class MapComponent implements AfterViewInit {
   public currentBarrioWeb: string = '';
   appGreenSites: L.Layer[] = [];
 
+  //TEST FILTERS
+  //https://xtk93x.github.io/Leaflet.TileLayer.ColorFilter.updateFilter/
+
   constructor(public cRef: ChangeDetectorRef) {}
 
   angularIcon = L.icon({
@@ -178,6 +181,19 @@ export class MapComponent implements AfterViewInit {
     }
   );
 
+  myFilter4 = ['invert:100%','grayscale:62%','bright:120%','saturate:398%'];
+  myFilter5 =   ['invert:100%','grayscale:6%','bright:149%','hue:216deg','saturate:354%'];
+
+  baseLayer4 = (L.tileLayer as any).colorFilter(
+    'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}.png',
+    {
+      maxZoom: 18,
+      attribution:
+        '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      filter: this.myFilter5,
+    }
+  );
+
   tonerLayer = (L.tileLayer as any).colorFilter(
     'https://stamen-tiles-{s}.a.ssl.fastly.net/toner-labels/{z}/{x}/{y}{r}.{ext}',
     {
@@ -214,6 +230,7 @@ export class MapComponent implements AfterViewInit {
       'Open Street Map': this.baseLayer1,
       'WaterColor Map 2': this.baseLayer2,
       'Toner Map': this.baseLayer3,
+      'New Map': this.baseLayer4,
     },
     overlays: {
       'Big Circle': L.circle([41.3947, 2.181], { radius: 5000 }),
