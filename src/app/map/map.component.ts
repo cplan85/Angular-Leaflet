@@ -168,6 +168,16 @@ export class MapComponent implements AfterViewInit {
     }
   );
 
+  baseLayer3 = (L.tileLayer as any).colorFilter(
+    'https://stamen-tiles.a.ssl.fastly.net/toner/{z}/{x}/{y}.png',
+    {
+      maxZoom: 18,
+      attribution:
+        '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      filter: this.myFilter,
+    }
+  );
+
   tonerLayer = (L.tileLayer as any).colorFilter(
     'https://stamen-tiles-{s}.a.ssl.fastly.net/toner-labels/{z}/{x}/{y}{r}.{ext}',
     {
@@ -203,6 +213,7 @@ export class MapComponent implements AfterViewInit {
     baseLayers: {
       'Open Street Map': this.baseLayer1,
       'WaterColor Map 2': this.baseLayer2,
+      'Toner Map': this.baseLayer3,
     },
     overlays: {
       'Big Circle': L.circle([41.3947, 2.181], { radius: 5000 }),
