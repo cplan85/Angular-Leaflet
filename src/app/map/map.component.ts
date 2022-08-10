@@ -28,7 +28,7 @@ export class MapComponent implements AfterViewInit {
   constructor(public cRef: ChangeDetectorRef) {}
 
   angularIcon = L.icon({
-    iconUrl: './assets/angular-icon.svg',
+    iconUrl: './assets/event-icon.svg',
     shadowUrl: './assets/leaf-shadow.png',
     //alt: 'Angular',
 
@@ -183,6 +183,13 @@ export class MapComponent implements AfterViewInit {
 
   myFilter4 = ['invert:100%','grayscale:62%','bright:120%','saturate:398%'];
   myFilter5 =   ['invert:100%','grayscale:6%','bright:149%','hue:216deg','saturate:354%'];
+  myFilter6 = ['bright:93%','contrast:103%','hue:335deg','saturate:381%'];
+
+  myFilter7 = ['grayscale:11%','bright:93%','contrast:103%','hue:309deg','saturate:381%'];
+  //latest
+  myFilter8 =  ['grayscale:11%','hue:307deg'];
+
+  myFilter9 =  ['grayscale:11%','hue:332deg'];
 
   baseLayer4 = (L.tileLayer as any).colorFilter(
     'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}.png',
@@ -190,7 +197,17 @@ export class MapComponent implements AfterViewInit {
       maxZoom: 18,
       attribution:
         '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-      filter: this.myFilter5,
+      filter: this.myFilter7,
+    }
+  );
+
+  baseLayer5 = (L.tileLayer as any).colorFilter(
+    'https://stamen-tiles.a.ssl.fastly.net/watercolor/{z}/{x}/{y}.jpg',
+    {
+      maxZoom: 18,
+      attribution:
+        '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      filter: this.myFilter8,
     }
   );
 
@@ -231,6 +248,7 @@ export class MapComponent implements AfterViewInit {
       'WaterColor Map 2': this.baseLayer2,
       'Toner Map': this.baseLayer3,
       'New Map': this.baseLayer4,
+      'Latest Map': this.baseLayer5,
     },
     overlays: {
       'Big Circle': L.circle([41.3947, 2.181], { radius: 5000 }),
